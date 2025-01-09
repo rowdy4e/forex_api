@@ -6,8 +6,10 @@ COPY package.json .
 
 RUN npm install
 
-COPY index.js .
+COPY . .
+
+COPY .env.example .env
 
 EXPOSE 3000
 
-CMD [ "node", "index.js" ]
+CMD [ "npm", "run", "start" ]

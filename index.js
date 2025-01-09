@@ -1,40 +1,16 @@
 const express = require('express');
-const cheerio = require('cheerio');
+const checkToken = require('./middleware');
+const { scrapeForexFactory } = require('./scrapers');
+
 const app = express();
 const port = 3000;
 
-async function scrapeForex() {
-    try {
-        const response = await fetch('https://www.forexfactory.com/');
-        const body = await response.text();
-        
-        $ = cheerio.load(body);
+app.use(express.json());
 
-        const arr = [];
+app.get('/scrape/forexfactory', checkToken, async (req, res) => {
+    const body = await scrapeForexFactory();
 
-        const row = $(`.calendar__row[data-event-id]`);
-
-        row.each((index, element) => {
-            arr.push({
-                'time': $(element).find(`td.calendar__cell.calendar__time`).text().trim(),
-                'currency': $(element).find(`td.calendar__cell.calendar__currency`).text().trim(),
-                'event': $(element).find(`td.calendar__cell.calendar__event`).text().trim(),
-                'actual': $(element).find(`td.calendar__cell.calendar__actual`).text().trim(),
-                'forecast': $(element).find(`td.calendar__cell.calendar__forecast`).text().trim(),
-                'previous': $(element).find(`td.calendar__cell.calendar__previous`).text().trim(),
-            });
-        });
-
-        return {'success': true, 'data': arr};
-    } catch (error) {
-        return {'success': false, 'message': error.message};
-    }
-};
-
-app.get('/', async (req, res) => {
-    const body = await scrapeForex();
-
-    res.send(body);
+    res.status(200).json(body);
 });
 
 app.listen(port, () => {
